@@ -36,6 +36,7 @@ st.markdown("""
         border-radius: 10px;
         padding: 16px 20px;
         margin-bottom: 14px;
+        color: #1e293b;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -181,4 +182,4 @@ with col_right:
                         st.success(f"**Cultural Management:** {kb['cultural']}")
                         
                 except Exception as e:
-                    st.error(f"Connection error: {e}. Check that your Colab cell is running and the tunnel URL is active.")
+                    st.error(f"Connection error: {e}. Check that your Colab backend tunnel is active.")
