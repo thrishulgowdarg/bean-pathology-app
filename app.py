@@ -5,117 +5,92 @@ from PIL import Image
 # Your live tunnel URL from Colab
 API_URL = "https://young-ducks-admire.loca.lt/predict"
 
-# 1. Page Config must be first
-st.set_page_config(page_title="Rootsgoods Plant Pathology", page_icon="🌱", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="Rootsgoods Plant Pathology", page_icon="🌱", layout="wide")
 
-# 2. Inject Custom CSS for a Premium UI
+# Inject Custom Enterprise CSS
 st.markdown("""
     <style>
-    /* Main background */
-    .stApp {
-        background-color: #f8fafc;
+    .stApp { background-color: #f8fafc; }
+    .main-header {
+        text-align: center; color: #166534; font-family: sans-serif;
+        font-weight: 800; font-size: 2.5rem; margin-bottom: 0; padding-bottom: 0;
     }
-    /* Custom Header */
-    .hero-text {
-        text-align: center;
-        color: #166534;
-        font-family: 'Inter', sans-serif;
-        font-weight: 800;
-        font-size: 2.8rem;
-        margin-bottom: 0rem;
-        padding-bottom: 0rem;
+    .sub-header {
+        text-align: center; color: #475569; font-size: 1.1rem; margin-bottom: 2rem;
     }
-    .hero-sub {
-        text-align: center;
-        color: #475569;
-        font-size: 1.1rem;
-        margin-bottom: 2rem;
-    }
-    /* Style the upload box */
-    .stFileUploader>div>div {
-        background-color: white;
-        border-radius: 10px;
-        padding: 10px;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    }
-    /* Style the button */
     .stButton>button {
-        border-radius: 8px;
-        height: 3.5em;
-        font-size: 1.1em;
-        font-weight: bold;
-        transition: all 0.3s ease;
+        background-color: #166534; color: white; border-radius: 8px;
+        height: 3em; font-size: 1.1em; font-weight: bold; border: none;
+    }
+    .stButton>button:hover {
+        background-color: #14532d; border: none; color: white;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# 3. Hero Header
-st.markdown('<p class="hero-text">🌱 Rootsgoods Diagnostic AI</p>', unsafe_allow_html=True)
-st.markdown('<p class="hero-sub">Powered by MiniCPM-V 2.6 & Custom Deep CPU Matrix (95.25% Accuracy)</p>', unsafe_allow_html=True)
+st.markdown('<p class="main-header">🌱 Rootsgoods Diagnostic AI</p>', unsafe_allow_html=True)
+st.markdown('<p class="sub-header">Powered by MiniCPM-V 2.6 & Custom Deep CPU Matrix (95.25% Accuracy)</p>', unsafe_allow_html=True)
 st.divider()
 
-# 4. Split Layout
-col1, col_gap, col2 = st.columns([1.2, 0.1, 1])
+col1, gap, col2 = st.columns([1, 0.1, 1])
 
 with col1:
-    st.markdown("### 📸 1. Leaf Specimen Analysis")
+    st.markdown("<h3 style='color: #1e293b;'>📸 1. Leaf Specimen Analysis</h3>", unsafe_allow_html=True)
     st.info("Upload a clear, well-lit image of the affected maize crop.")
     uploaded_file = st.file_uploader("", type=["jpg", "jpeg", "png"], label_visibility="collapsed")
     
     if uploaded_file is not None:
         image = Image.open(uploaded_file)
-        # Use container to give the image a nice border
         with st.container(border=True):
             st.image(image, caption="Target Specimen", use_container_width=True)
 
 with col2:
-    st.markdown("### 🔬 2. Diagnostic Report")
+    st.markdown("<h3 style='color: #1e293b;'>🔬 2. Diagnostic Report</h3>", unsafe_allow_html=True)
     
     if uploaded_file is None:
         st.warning("👈 Awaiting image upload to begin analysis...")
     else:
-        if st.button("🚀 Run Deep Matrix Analysis", type="primary", use_container_width=True):
+        if st.button("🚀 Run Deep Matrix Analysis", use_container_width=True):
             with st.spinner("Extracting 13,056-dim features & running deep CPU probe..."):
                 uploaded_file.seek(0)
                 files = {"file": (uploaded_file.name, uploaded_file, "image/jpeg")}
                 
                 try:
                     response = requests.post(API_URL, files=files)
-                    
                     if response.status_code == 200:
                         data = response.json()
                         predictions = data.get("predictions", {})
                         latency = data.get("latency_ms", 0)
                         
                         st.success(f"⚡ Inference completed in **{latency} ms** on CPU edge-backend")
+                        st.markdown("<h4 style='color: #1e293b; margin-top: 15px;'>Top Pathologies Detected:</h4>", unsafe_allow_html=True)
                         
-                        # Premium Results Container
-                        with st.container(border=True):
-                            st.markdown("#### Top Pathologies Detected")
+                        # Custom HTML Progress Cards (Fixes invisible text issue)
+                        for i, (disease, prob) in enumerate(predictions.items()):
+                            clean_name = disease.replace("_", " ").title()
+                            percentage = prob * 100
                             
-                            for i, (disease, prob) in enumerate(predictions.items()):
-                                clean_name = disease.replace("_", " ").title()
-                                percentage = prob * 100
-                                
-                                # Use columns for a clean metric layout
-                                m_col1, m_col2 = st.columns([3, 1])
-                                with m_col1:
-                                    st.markdown(f"**{i+1}. {clean_name}**")
-                                with m_col2:
-                                    st.markdown(f"`{percentage:.2f}%`")
-                                    
-                                st.progress(float(prob))
-                                
-                        # Actionable Next Steps
+                            html_bar = f"""
+                            <div style="background-color: white; padding: 14px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                    <span style="font-weight: 700; color: #334155; font-size: 16px;">{i+1}. {clean_name}</span>
+                                    <span style="font-weight: 800; color: #166534; font-size: 16px;">{percentage:.1f}%</span>
+                                </div>
+                                <div style="width: 100%; background-color: #f1f5f9; border-radius: 4px; height: 10px;">
+                                    <div style="width: {percentage}%; background-color: #22c55e; height: 10px; border-radius: 4px;"></div>
+                                </div>
+                            </div>
+                            """
+                            st.markdown(html_bar, unsafe_allow_html=True)
+                            
+                        # Actionable Dropdown
                         top_disease = list(predictions.keys())[0].replace("_", " ").title()
                         with st.expander(f"📝 Recommended Protocol for {top_disease}"):
-                            st.write(f"**Immediate Actions:**")
+                            st.write("**Immediate Actions:**")
                             st.write("- Isolate the affected crop sector if possible.")
                             st.write("- Log the geographic coordinates of this specimen in the Rootsgoods database.")
-                            st.write("- Consult the agronomy team for targeted chemical or biological treatments specific to this diagnosis.")
-                            
+                            st.write("- Consult the agronomy team for targeted chemical or biological treatments.")
                     else:
                         st.error(f"Backend Error: {response.status_code}")
-                        
                 except requests.exceptions.ConnectionError:
-                    st.error("⚠️ Could not connect to the backend. Ensure LocalTunnel is running in Colab and you've entered the IP password in the browser.")
+                    st.error("⚠️ Could not connect to the backend. Ensure LocalTunnel is running and the IP password was entered.")
